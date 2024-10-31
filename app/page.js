@@ -122,7 +122,7 @@ export default function Home() {
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
       const prompt = `Based on these customer reviews about Shashank: "${inputReviews}"
-      Generate 3 different, authentic ${selectedCategory} reviews about Shashank with 5 star rating sentiment.
+      Generate 10 different, authentic ${selectedCategory} reviews about Shashank with 5 star rating sentiment.
       Format each review to start with "###REVIEW###" and end with "###END###".
       Keep them natural and conversational.`;
 
@@ -176,6 +176,34 @@ export default function Home() {
       }, 2000);
     } catch (err) {
       console.error("Failed to copy text: ", err);
+    }
+  };
+
+  // Add this new function after the copyToClipboard function
+  const copyAllReviews = async () => {
+    try {
+      const allReviewsText = generatedReviews
+        .slice(0, 10)
+        .map((review) => review.text)
+        .join("\n\n");
+
+      await navigator.clipboard.writeText(allReviewsText);
+
+      // Show temporary success message
+      const button = document.getElementById("copy-all-btn");
+      const originalText = button.innerHTML;
+      button.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        All Copied!
+      `;
+
+      setTimeout(() => {
+        button.innerHTML = originalText;
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy all reviews: ", err);
     }
   };
 
@@ -369,7 +397,8 @@ export default function Home() {
               Generated Reviews
               {generatedReviews.length > 0 && (
                 <span className="text-sm font-normal text-gray-500 ml-2">
-                  (Latest batch: {Math.min(3, generatedReviews.length)} reviews)
+                  (Latest batch: {Math.min(10, generatedReviews.length)}{" "}
+                  reviews)
                 </span>
               )}
             </h2>
@@ -382,7 +411,32 @@ export default function Home() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
               >
-                {generatedReviews.slice(0, 3).map((review, index) => (
+                {/* Add this new button */}
+                <motion.button
+                  id="copy-all-btn"
+                  onClick={copyAllReviews}
+                  className="flex items-center px-4 py-2 bg-white text-blue-600 rounded-xl border border-blue-200 hover:bg-blue-50 transition-all duration-200 group mb-4"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform duration-200"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                    />
+                  </svg>
+                  Copy All Reviews
+                </motion.button>
+
+                {generatedReviews.slice(0, 10).map((review, index) => (
                   <motion.div
                     key={review.id}
                     initial={{ opacity: 0, y: 20 }}
