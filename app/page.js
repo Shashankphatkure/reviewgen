@@ -12,13 +12,61 @@ const categories = [
   "Problem Solving",
 ];
 
+const courses = [
+  "Full Stack Development",
+  "Data Structures & Algorithms",
+  "System Design",
+  "DevOps Engineering",
+  "Cloud Computing",
+  "Machine Learning",
+];
+
+// Pre-filled reviews for each course
+const courseReviews = {
+  "Full Stack Development": `Shashank's full stack development course was incredible. His explanation of both frontend and backend concepts was crystal clear. The projects we built were practical and industry-relevant.
+    The way he explained React concepts and Node.js architecture was exceptional.
+    His teaching methodology and hands-on approach really helped me land my first dev role.`,
+
+  "Data Structures & Algorithms": `Shashank's DSA course transformed my problem-solving abilities. His systematic approach to breaking down complex problems was invaluable.
+    The way he teaches dynamic programming and graph algorithms is simply outstanding.
+    Thanks to his course, I cleared multiple FAANG interviews.`,
+
+  "System Design": `The system design course by Shashank was eye-opening. His real-world examples and architectural insights were fantastic.
+    His explanation of scalability concepts and distributed systems was very practical.
+    The case studies of real companies' architecture were extremely helpful.`,
+
+  "DevOps Engineering": `Shashank's DevOps course was comprehensive and practical. His coverage of CI/CD pipelines and container orchestration was excellent.
+    The hands-on labs with Docker and Kubernetes were incredibly well-structured.
+    His insights into DevOps best practices were invaluable.`,
+
+  "Cloud Computing": `The cloud computing course exceeded my expectations. Shashank's expertise in AWS and cloud architecture is remarkable.
+    His explanations of cloud services and best practices were very clear.
+    The real-world projects helped me understand enterprise cloud deployment.`,
+
+  "Machine Learning": `Shashank's machine learning course was outstanding. His ability to explain complex concepts in simple terms is remarkable.
+    The practical implementations and real-world case studies were very helpful.
+    His coverage of neural networks and deep learning was comprehensive yet accessible.`,
+};
+
 export default function Home() {
-  const [inputReviews, setInputReviews] = useState("");
+  const [inputReviews, setInputReviews] = useState(
+    courseReviews["Full Stack Development"]
+  );
+  const [selectedCourse, setSelectedCourse] = useState(
+    "Full Stack Development"
+  );
   const [generatedReview, setGeneratedReview] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] =
     useState("General Experience");
   const [generatedReviews, setGeneratedReviews] = useState([]);
+  const [copiedReviews, setCopiedReviews] = useState(new Set());
+
+  // Handle course change
+  const handleCourseChange = (course) => {
+    setSelectedCourse(course);
+    setInputReviews(courseReviews[course]);
+  };
 
   const generateReview = async () => {
     try {
@@ -63,10 +111,10 @@ export default function Home() {
     try {
       await navigator.clipboard.writeText(text);
 
-      // Get the button element
+      setCopiedReviews((prev) => new Set([...prev, id]));
+
       const button = document.getElementById(`copy-btn-${id}`);
 
-      // Temporarily change the button text
       const originalText = button.innerHTML;
       button.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -75,7 +123,6 @@ export default function Home() {
         Copied!
       `;
 
-      // Revert back after 2 seconds
       setTimeout(() => {
         button.innerHTML = originalText;
       }, 2000);
@@ -91,14 +138,28 @@ export default function Home() {
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             AI Review Generator
           </h1>
-          <p className="text-gray-600">
-            Generate authentic reviews about Shashank using Gemini AI
-          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Input Section */}
           <div className="bg-white rounded-2xl shadow-xl p-6 space-y-6">
+            <div>
+              <label className="block text-gray-700 font-semibold mb-2">
+                Course
+              </label>
+              <select
+                value={selectedCourse}
+                onChange={(e) => handleCourseChange(e.target.value)}
+                className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {courses.map((course) => (
+                  <option key={course} value={course}>
+                    {course}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div>
               <label className="block text-gray-700 font-semibold mb-2">
                 Review Category
@@ -118,13 +179,13 @@ export default function Home() {
 
             <div>
               <label className="block text-gray-700 font-semibold mb-2">
-                Input Reviews
+                Input Reviews for {selectedCourse}
               </label>
               <textarea
                 className="w-full p-4 border border-gray-200 rounded-xl bg-gray-50 min-h-[200px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={inputReviews}
                 onChange={(e) => setInputReviews(e.target.value)}
-                placeholder="Paste existing reviews here..."
+                placeholder="Pre-filled reviews for the selected course..."
               />
             </div>
 
@@ -186,8 +247,15 @@ export default function Home() {
                   {generatedReviews.slice(0, 3).map((review, index) => (
                     <div
                       key={review.id}
-                      className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 hover:border-blue-300 transition-all duration-200"
+                      className={`p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 hover:border-blue-300 transition-all duration-200 relative ${
+                        copiedReviews.has(review.id)
+                          ? "ring-2 ring-red-200"
+                          : ""
+                      }`}
                     >
+                      {copiedReviews.has(review.id) && (
+                        <div className="absolute inset-0 bg-red-50 opacity-20 rounded-xl pointer-events-none" />
+                      )}
                       <div className="flex justify-between items-center mb-2">
                         <div className="flex items-center">
                           <span className="text-sm font-medium text-blue-600 mr-2">
@@ -250,8 +318,15 @@ export default function Home() {
                   {generatedReviews.slice(3).map((review) => (
                     <div
                       key={review.id}
-                      className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-200"
+                      className={`p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-200 relative ${
+                        copiedReviews.has(review.id)
+                          ? "ring-2 ring-red-200"
+                          : ""
+                      }`}
                     >
+                      {copiedReviews.has(review.id) && (
+                        <div className="absolute inset-0 bg-red-50 opacity-20 rounded-xl pointer-events-none" />
+                      )}
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-sm font-medium text-blue-600">
                           {review.category}
